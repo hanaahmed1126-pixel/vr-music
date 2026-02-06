@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>My Musical Sandbox VR</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-environment-component@1.3.2/dist/aframe-environment-component.min.js"></script>
+  </head>
+  <body>
+    <a-scene>
+      
+      <a-entity environment="preset: forest; dressingAmount: 500; groundColor: #224b22;"></a-entity>
+
+      <a-entity id="leftHand" hand-tracking-controls="hand: left;" laser-controls="hand: left">
+        <a-sphere position="0 0.05 0" radius="0.02" color="gold"></a-sphere> </a-entity>
+      
+      <a-entity id="rightHand" hand-tracking-controls="hand: right;" laser-controls="hand: right">
+         <a-box position="0 0.05 0" width="0.02" height="0.02" depth="0.02" color="red"></a-box> </a-entity>
+
+      <a-sphere id="handpan" position="0 1.2 -1" radius="0.3" 
+                color="#4CC3D9" material="emissive: #4CC3D9; emissiveIntensity: 0.5"
+                animation="property: position; dir: alternate; dur: 2000; loop: true; to: 0 1.25 -1">
+      </a-sphere>
+
+      <a-light type="ambient" color="#fff"></a-light>
+    </a-scene>
+  </body>
+</html>
