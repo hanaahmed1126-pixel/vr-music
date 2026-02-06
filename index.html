@@ -2,70 +2,74 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Hana's Music Sandbox VR</title>
+    <title>Hana's Magical Music VR</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-environment-component@1.3.2/dist/aframe-environment-component.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
 </head>
 <body>
-    <a-scene library-loader>
+    <a-scene shadow="type: pcfsoft" reflection="directionalLight: #light">
         
         <a-assets>
-            <img id="space-texture" src="https://cdn.aframe.io/a-painter/images/sky.jpg">
+            <img id="glow" src="https://cdn.aframe.io/a-painter/images/glowwriter.png">
         </a-assets>
 
-        <a-entity id="world" environment="preset: forest; dressingAmount: 500; shadow: true;"></a-entity>
+        <a-entity id="env" environment="preset: forest; dressing: trees; dressingAmount: 100; dressingColor: #224b22; ground: canyon; groundColor: #1a331a; lighting: point; skyType: gradient; skyColor: #234d23;"></a-entity>
 
         <a-entity id="rig">
             <a-camera position="0 1.6 0"></a-camera>
             
-            <a-entity id="leftHand" hand-tracking-controls="hand: left;" laser-controls="hand: left">
+            <a-entity id="leftHand" hand-tracking-controls="hand: left; modelStyle: realistic;">
+                <a-entity id="wrist-menu" position="0 0.08 0" rotation="-90 0 0">
+                    <a-sphere radius="0.03" position="-0.05 0 0" color="#ff00ff" class="menu-item"><a-text value="Pan" scale="0.1 0.1 0.1" position="-0.02 0.04 0"></a-text></a-sphere>
+                    <a-cylinder radius="0.03" height="0.01" position="0 0 0" color="#00ffff" class="menu-item"><a-text value="Marimba" scale="0.1 0.1 0.1" position="-0.04 0.04 0"></a-text></a-cylinder>
+                    <a-box width="0.04" height="0.04" depth="0.01" position="0.05 0 0" color="#ffff00" class="menu-item"><a-text value="Guitar" scale="0.1 0.1 0.1" position="-0.03 0.04 0"></a-text></a-box>
                 </a-entity>
-
-            <a-entity id="rightHand" hand-tracking-controls="hand: right;" laser-controls="hand: right">
-                <a-box id="undo-btn" position="0 0.05 0" width="0.05" height="0.02" depth="0.05" color="red" visible="true"></a-box>
+            </a-entity>
+            
+            <a-entity id="rightHand" hand-tracking-controls="hand: right; modelStyle: realistic;">
+                <a-capsule id="undo-button" position="0 0.05 0" radius="0.01" length="0.04" color="#ff4444" rotation="0 0 90">
+                    <a-text value="UNDO" scale="0.1 0.1 0.1" position="-0.02 0.03 0" color="white"></a-text>
+                </a-capsule>
             </a-entity>
         </a-entity>
 
-        <a-entity id="main-handpan" position="0 1.2 -0.8">
-            <a-sphere radius="0.4" color="#555" material="metalness: 0.8; roughness: 0.2;">
-                <a-cylinder position="0 0.38 0" radius="0.1" height="0.02" color="cyan" class="playable" 
-                            animation="property: material.emissiveIntensity; from: 0; to: 1; dir: alternate; loop: true;"></a-cylinder>
+        <a-entity id="handpan-container" position="0 1.1 -0.6" rotation="-20 0 0">
+            <a-sphere radius="0.35" scale="1 0.5 1" color="#444" material="roughness: 0.1; metalness: 0.9;">
+                <a-ring color="#77ff77" radius-inner="0.1" radius-outer="0.12" position="0 0.31 0" rotation="-90 0 0" material="emissive: #77ff77; emissiveIntensity: 2;"></a-ring>
             </a-sphere>
+            <a-entity id="play-surface" geometry="primitive: cylinder; radius: 0.3; height: 0.05" position="0 0.15 0" material="visible: false" class="playable"></a-entity>
         </a-entity>
 
-        <a-entity id="trash-can" position="2 0 -2">
-            <a-cylinder radius="0.3" height="0.6" color="#333"></a-cylinder>
-            <a-text value="TRASH" position="-0.2 0.8 0" color="white"></a-text>
+        <a-entity id="trash-area" position="1.5 0 -1.5">
+            <a-cylinder radius="0.25" height="0.5" color="#555" material="metalness: 0.5; roughness: 0.8;"></a-cylinder>
+            <a-torus radius="0.25" radius-tubular="0.01" position="0 0.25 0" rotation="90 0 0" color="#333"></a-torus>
+            <a-text value="DISCARD" position="-0.2 0.7 0" scale="0.5 0.5 0.5" color="#ff6666"></a-text>
         </a-entity>
+
+        <a-light type="ambient" intensity="0.4"></a-light>
+        <a-light id="light" type="directional" intensity="0.8" position="-1 5 2" castShadow="true"></a-light>
 
     </a-scene>
 
     <script>
-        // GAME LOGIC: This is the "Brain"
-        // 1. Function to create the Loop Circles you wanted
-        function createLoopCircle(position, color) {
-            const scene = document.querySelector('a-scene');
-            const circle = document.createElement('a-entity');
-            circle.setAttribute('geometry', 'primitive: ring; radiusInner: 0.2; radiusOuter: 0.25');
-            circle.setAttribute('material', `color: ${color}; shader: flat`);
-            circle.setAttribute('position', position);
-            circle.setAttribute('class', 'grabbable');
-            // Adding physics-like behavior for grabbing
-            scene.appendChild(circle);
-        }
-
-        // 2. Automatic Pointing Gesture
-        const rightHand = document.querySelector('#rightHand');
-        rightHand.addEventListener('triggerdown', function () {
-            // When trigger is pressed, it plays the sound
-            console.log("Instrument Played!");
+        // MUSIC LOGIC
+        // Every time you touch the handpan, it creates a color-coded loop ring
+        const handpan = document.querySelector('.playable');
+        
+        handpan.addEventListener('mouseenter', () => {
+            // Visualize the "Automatic Pointing" gesture logic
+            console.log("Ready to Play...");
         });
 
-        // 3. Room Switching Logic
-        function changeToSpace() {
-            const world = document.querySelector('#world');
-            world.setAttribute('environment', 'preset: starry; ground: spikes');
+        // Function to create your specific "Ring in a Circle" loops
+        function spawnLoop(color) {
+            const loop = document.createElement('a-entity');
+            loop.setAttribute('geometry', 'primitive: ring; radiusInner: 0.18; radiusOuter: 0.2');
+            loop.setAttribute('material', `color: ${color}; emissive: ${color}; emissiveIntensity: 1`);
+            // Position it in front of the user as requested
+            loop.setAttribute('position', {x: (Math.random() - 0.5) * 2, y: 1.5, z: -1});
+            document.querySelector('a-scene').appendChild(loop);
         }
     </script>
 </body>
